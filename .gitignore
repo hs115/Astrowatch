@@ -26,3 +26,5 @@ dist-ssr
 .env
 .env.example
 server/env.example
+Google Client Id.txt
+client_secret_801146160173-102p2ns1n3g616hcbjoaa5ee6qlki7ip.apps.googleusercontent.com.json

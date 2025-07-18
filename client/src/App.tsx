@@ -1,5 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import AuthForm from './components/auth/AuthForm'
 import Dashboard from './components/dashboard/Dashboard'
@@ -30,12 +31,16 @@ function AppRoutes() {
 }
 
 function App() {
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '386932037035801146160173-102p2ns1n3g616hcbjoaa5ee6qlki7ip.apps.googleusercontent.com'
+  
   return (
-    <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
-    </AuthProvider>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <AuthProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </AuthProvider>
+    </GoogleOAuthProvider>
   )
 }
 

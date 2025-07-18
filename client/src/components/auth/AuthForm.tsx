@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
+import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '../../context/AuthContext'
 import { Stars, Mail, Lock, User } from 'lucide-react'
-
-
 
 export default function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false)
@@ -33,6 +32,45 @@ export default function AuthForm() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      setLoading(true)
+      setError('')
+      
+      // Send the credential to your backend
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/auth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          credential: credentialResponse.credential
+        })
+      })
+
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Google authentication failed')
+      }
+
+      // Handle successful Google login (similar to regular signin)
+      if (data.session?.token) {
+        localStorage.setItem('authToken', data.session.token)
+        // You might want to update your AuthContext to handle this
+        window.location.reload() // Simple redirect for now
+      }
+    } catch (error: any) {
+      setError(error.message || 'Google authentication failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleError = () => {
+    setError('Google authentication failed')
   }
 
   return (
@@ -105,7 +143,20 @@ export default function AuthForm() {
             >
               {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
             </button>
-        
+            
+            {/* Google Sign In Button */}
+            <div className="mt-2">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap
+                theme="outline"
+                size="large"
+                text="signin_with"
+                shape="rectangular"
+                width="100%"
+              />
+            </div>
           </form>
 
           <div className="mt-6 text-center">

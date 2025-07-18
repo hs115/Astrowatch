@@ -1,6 +1,7 @@
 import express from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { OAuth2Client } from 'google-auth-library'
 import { getDb } from '../config/supabase.js'
 
 const router = express.Router()
@@ -113,6 +114,63 @@ router.post('/signout', async (req, res) => {
   // No server-side action needed for JWT signout
   console.log(`[${timestamp}] [POST] /api/auth/signout - end`)
   res.json({ message: 'Signed out successfully' })
+})
+
+// Google OAuth endpoint
+router.post('/google', async (req, res) => {
+  const timestamp = new Date().toISOString()
+  console.log(`[${timestamp}] [POST] /api/auth/google - start - Body:`, JSON.stringify(req.body))
+  try {
+    const { credential } = req.body
+    
+    if (!credential) {
+      console.log(`[${timestamp}] [POST] /api/auth/google - missing credential`)
+      return res.status(400).json({ error: 'Missing credential' })
+    }
+
+    // Verify the Google ID token
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+    
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID
+    })
+    
+    const payload = ticket.getPayload()
+    const { email, name, sub: googleId } = payload
+
+    // Find or create user in database
+    const db = await getDb()
+    const users = db.collection('users')
+    
+    let user = await users.findOne({ email })
+    
+    if (!user) {
+      // Create new user
+      user = {
+        email,
+        full_name: name,
+        googleId,
+        created_at: new Date(),
+        updated_at: new Date(),
+      }
+      const result = await users.insertOne(user)
+      user._id = result.insertedId
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' })
+    
+    console.log(`[${timestamp}] [POST] /api/auth/google - end`)
+    res.json({
+      message: 'Google authentication successful',
+      user: { email: user.email, full_name: user.full_name },
+      session: { token }
+    })
+  } catch (error) {
+    console.error('Google OAuth error:', error)
+    res.status(500).json({ error: 'Google authentication failed' })
+  }
 })
 
 export default router 
