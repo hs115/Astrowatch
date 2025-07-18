@@ -1,18 +1,23 @@
-import { createClient } from '@supabase/supabase-js'
+import { MongoClient } from 'mongodb'
 import dotenv from 'dotenv'
 
 dotenv.config()
 
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const uri = process.env.MONGODB_URI
+const dbName = process.env.MONGODB_DB
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing Supabase environment variables')
+if (!uri || !dbName) {
+  throw new Error('Missing MongoDB environment variables')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
+let client
+let db
+
+export async function getDb() {
+  if (!client || !db) {
+    client = new MongoClient(uri)
+    await client.connect()
+    db = client.db(dbName)
   }
-}) 
+  return db
+} 

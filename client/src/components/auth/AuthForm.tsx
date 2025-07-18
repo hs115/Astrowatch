@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { Stars, Mail, Lock, User } from 'lucide-react'
 
+
+
 export default function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
@@ -103,6 +105,7 @@ export default function AuthForm() {
             >
               {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
             </button>
+        
           </form>
 
           <div className="mt-6 text-center">

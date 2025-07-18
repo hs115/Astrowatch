@@ -16,6 +16,7 @@ export interface Profile {
 export interface User {
   id: string
   email: string
+  full_name: string
   created_at: string
   updated_at: string
 }
@@ -94,16 +95,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         return { error }
       }
-      
-      if (data && typeof data === 'object' && 'user' in data) {
-        const userData = data as any
-        if (userData.user) {
-          setUser(userData.user)
+      // Handle token after signup (same as signIn)
+      if (data && typeof data === 'object' && 'session' in data) {
+        const sessionData = data as any
+        if (sessionData.session?.token) {
+          localStorage.setItem('authToken', sessionData.session.token)
+          apiClient.setToken(sessionData.session.token)
+          // Set user with the correct structure from backend response
+          if (sessionData.user) {
+            setUser({
+              id: sessionData.user.id || 'temp-id',
+              email: sessionData.user.email,
+              full_name: sessionData.user.full_name,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+          }
+          await fetchProfile()
+          return { data, error: null }
         }
-        // For signup, we might need to handle email confirmation
-        return { data, error: null }
       }
-      
       return { data, error: null }
     } catch (error) {
       return { error: 'Signup failed' }
@@ -119,11 +130,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (data && typeof data === 'object' && 'session' in data) {
         const sessionData = data as any
-        if (sessionData.session?.access_token) {
-          localStorage.setItem('authToken', sessionData.session.access_token)
-          apiClient.setToken(sessionData.session.access_token)
+        if (sessionData.session?.token) {
+          localStorage.setItem('authToken', sessionData.session.token)
+          apiClient.setToken(sessionData.session.token)
+          // Set user with the correct structure from backend response
           if (sessionData.user) {
-            setUser(sessionData.user)
+            setUser({
+              id: sessionData.user.id || 'temp-id', // Backend might not return id in user object
+              email: sessionData.user.email,
+              full_name: sessionData.user.full_name,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
           }
           await fetchProfile()
           return { data, error: null }
