@@ -5,7 +5,7 @@ A modern astrology application with personalized horoscopes, compatibility match
 ## Project Structure
 
 ```
-AstroWatch_client/
+AstroWatch/
 ├── client/                 # Frontend React application
 │   ├── src/
 │   │   ├── components/     # React components
@@ -29,7 +29,8 @@ AstroWatch_client/
 ### Prerequisites
 
 - Node.js (v16 or higher)
-- Supabase account and project
+- MongoDB Cloud account and cluster
+- Google Cloud Console account (for OAuth)
 - Git
 
 ### Setup
@@ -37,7 +38,7 @@ AstroWatch_client/
 1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd AstroWatch_client
+cd AstroWatch
 ```
 
 2. **Setup the Server**
@@ -45,7 +46,7 @@ cd AstroWatch_client
 cd server
 npm install
 cp env.example .env
-# Edit .env with your Supabase credentials
+# Edit .env with your MongoDB and Google OAuth credentials
 npm run dev
 ```
 
@@ -53,19 +54,19 @@ npm run dev
 ```bash
 cd ../client
 npm install
-# Create .env file with VITE_API_URL=http://localhost:3001/api
+# Create .env file with VITE_API_URL=http://localhost:3001/api and VITE_GOOGLE_CLIENT_ID
 npm run dev
 ```
 
 4. **Database Setup**
-   - Run the SQL migrations in your Supabase project:
-     - `server/database/migrations/001_create_profiles_table.sql`
-     - `server/database/migrations/002_create_horoscopes_table.sql`
+   - Create a MongoDB Cloud cluster
+   - The application will automatically create collections as needed
 
 ## Features
 
 ### 🌟 User Authentication
-- Secure signup and login
+- Secure signup and login with email/password
+- **Google OAuth integration** for seamless login
 - JWT token-based sessions
 - Profile management
 
@@ -90,25 +91,29 @@ npm run dev
 - **Tailwind CSS** - Styling
 - **React Router** - Navigation
 - **Lucide React** - Icons
+- **@react-oauth/google** - Google OAuth integration
 
 ### Backend (Server)
 - **Express.js** - Web framework
-- **Supabase** - Database and auth
+- **MongoDB Cloud** - Database
 - **JWT** - Token authentication
+- **bcryptjs** - Password hashing
+- **google-auth-library** - Google OAuth verification
 - **CORS** - Cross-origin requests
 - **Helmet** - Security headers
 - **Rate Limiting** - API protection
 
 ### Database
-- **PostgreSQL** (via Supabase)
-- **Row Level Security** (RLS)
-- **Real-time subscriptions**
+- **MongoDB Cloud** - NoSQL database
+- **Collections**: users, profiles, horoscopes
+- **Automatic user creation** on Google OAuth
 
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/signup` - User registration
-- `POST /api/auth/signin` - User login
+- `POST /api/auth/signup` - User registration (email/password)
+- `POST /api/auth/signin` - User login (email/password)
+- `POST /api/auth/google` - Google OAuth authentication
 - `GET /api/auth/session` - Get session
 - `POST /api/auth/signout` - User logout
 
@@ -125,8 +130,17 @@ npm run dev
 
 ### Server (.env)
 ```env
-SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+# MongoDB Configuration
+MONGODB_URI=your_mongodb_connection_string
+MONGODB_DB=your_database_name
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your_google_client_id
+
+# JWT Configuration
+JWT_SECRET=your_jwt_secret
+
+# Server Configuration
 PORT=3001
 NODE_ENV=development
 CLIENT_URL=http://localhost:5173
@@ -135,7 +149,27 @@ CLIENT_URL=http://localhost:5173
 ### Client (.env)
 ```env
 VITE_API_URL=http://localhost:3001/api
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
 ```
+
+## Google OAuth Setup
+
+1. **Create Google Cloud Project**:
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select existing one
+   - Enable Google+ API
+
+2. **Create OAuth 2.0 Credentials**:
+   - Go to Credentials → Create Credentials → OAuth 2.0 Client IDs
+   - Choose "Web application"
+   - Add authorized JavaScript origins:
+     - `http://localhost:5173` (development)
+     - Your production domain (when deployed)
+
+3. **Configure Environment Variables**:
+   - Use the same Client ID for both client and server
+   - Add `VITE_GOOGLE_CLIENT_ID` to client `.env`
+   - Add `GOOGLE_CLIENT_ID` to server `.env`
 
 ## Development
 
@@ -175,10 +209,11 @@ npm start
 ## Security Features
 
 - JWT token authentication
+- Google OAuth integration
+- Password hashing with bcrypt
 - CORS protection
 - Rate limiting
 - Input validation
-- SQL injection prevention
 - XSS protection
 
 ## Contributing
@@ -199,7 +234,7 @@ For issues and questions:
 1. Check the README files in `client/` and `server/` directories
 2. Review the API documentation
 3. Check the environment configuration
-4. Verify database migrations are applied
+4. Verify MongoDB connection and Google OAuth setup
 
 ---
 
